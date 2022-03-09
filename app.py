@@ -15,4 +15,4 @@ def create_tables():
 if __name__ == '__main__':
     # app.run(debug=Config.DEBUG)
     app.secret_key=Config.SECRET_KEY
-    app.run(host='0.0.0.0', port=8087, debug=True)
+    app.run(debug=True)

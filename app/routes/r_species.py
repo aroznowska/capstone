@@ -1,14 +1,13 @@
 from app import app, db
 
-from app.models.animals import Animal
-from app.models.centers import Center
-from app.models.species import Specie
+from ..models.animals import Animal
+from ..models.centers import Center
+from ..models.species import Specie
 from sqlalchemy import select
 from app.schemas import center_schema, centers_schema, animal_schema, animals_schema, specie_schema, species_schema
 
 import argparse
 import logging
-from app.engine import engine
 from sqlalchemy import select
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -24,27 +23,17 @@ jwt = JWTManager(app)
 
 @app.route("/add_specie", methods=["POST"])
 @jwt_required()
-def add_specie(specie_id):
-    parser = argparse.ArgumentParser()  # only allow price changes, no name changes allowed
-    parser.add_argument('specie_name', type=str, required=True, default="NoName",
-                        help="string type, this field cannot be left blank, default = NoName")
-    parser.add_argument('short_desc', type=str, required=True, default="None",
-                        help="Must enter the specie name (type = str), default = None"
-                        )
-    parser.add_argument('price', type=float, required=True, default=0.0,
-                        help="This field can be left blank (type = float), default = 0.0")
-    args = parser.parse_args()
-
-    specie_nam = args.specie_name
+def add_specie():
+    specie_nam = request.json['specie_name']
+    description = request.json['description']
+    price = request.json['price']
     specie_name = specie_nam.lower()
-    short_desc = args.short_desc
-    price = args.price
 
     if Specie.query.filer_by(specie_name=specie_name).first():
         logging.error('Specie is already exist')
     else:
-        new_specie = Specie(specie_id, specie_name, short_desc, price)
 
+        new_specie = Specie(specie_name, description, price)
         db.session.add(new_specie)
         db.session.commit()
 
@@ -58,21 +47,26 @@ def add_specie(specie_id):
         logging.debug(data)
 
 
-# endpoint to GET all categories
+
+# endpoint to GET all species - PROBLEM
+
 @app.route("/species", methods=["GET"])
 def get_species():
     all_species = Specie.query.all()
     result = species_schema.dump(all_species)
     all_species_names = Specie.query.with_entities(Specie.specie_name)
     for specie in all_species_names:
-        count = Animal.query.filter_by(specie_name=specie).count()
+        count=0
+        animals = Animal.query.with_entities(Animal.specie_name)
+        for animal in animals:
+            count=count+1
+            count1=str(count)
         data_specie = {
             'specie': result,
-            'num_of_animals': count
+            'num_of_animals': count1
         }
         print(jsonify(data_specie))
     return logging.debug("species printed")
-
 
 # endpoint to GET category detail by id
 @app.route("/specie/<int:specie_id>", methods=["GET"])

@@ -1,28 +1,21 @@
 from flask import jsonify
 
 from app import db
-from sqlalchemy_utils import ChoiceType
-
 import datetime, enum
 from other_methods import generate_uuid
-from app.models.animals import get_by_center_id
+from app.models.animals import get_by_center_id, Animal
+
 
 # enum choice class for is_published field in book model
-class BookIsPublishedEnum(enum.Enum):
-    yes = True
-    no = False
 
 
 class Center(db.Model):
-    __tablename__ = "author"
+    __tablename__ = "center"
 
-    center_id = db.Column(db.String(255), nullable=False, unique = True,  default = generate_uuid(), primary_key=True)
+    center_id = db.Column(db.String(255), nullable=False, unique = True, primary_key=True)
     password = db.Column(db.String(32), nullable = False)
     name = db.Column(db.String(100), nullable=False, unique = True)
     adress = db.Column(db.Text(), nullable = False)
-
-    created = db.Column(db.DateTime(timezone=True), default=db.func.current_timestamp(), nullable=False)
-
     animals = db.relationship(Animal, backref='center', lazy=True)
 
     def __init__(self, center_id, password, name, adress):

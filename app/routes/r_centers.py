@@ -8,8 +8,6 @@ from app.schemas import center_schema, centers_schema, animal_schema, animals_sc
 
 import argparse
 import logging
-from app.engine import engine
-from sqlalchemy import select
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
@@ -20,18 +18,19 @@ from flask_restful import reqparse, abort, Api, Resource
 from flask import request, jsonify, make_response
 
 jwt = JWTManager(app)
+@app.route("/")
+def hello():
+    return "hello"
+
+
 @app.route("/register", methods=["POST"])
-def register_center(center_id):
-    parser = argparse.ArgumentParser()  # only allow price changes, no name changes allowed
-    parser.add_argument('center_name', type=str, required=True,
-                        help="string type, this field cannot be left blank")
-    parser.add_argument('password', type=str, required=True,
-                        help="Must enter the center password (type = str)"
-                        )
-    parser.add_argument('adress', type=str, required=True, default="None",
-                        help="This field can be left blank (type = str)")
-    args = parser.parse_args()
-    new_center = Center(center_id, args.center_name, args.password, args.adress)
+def register_center():
+
+    center_name = request.json['center_name']
+    password = request.json['password']
+    adress = request.json['adress']
+
+    new_center = Center(center_name, password, adress)
 
     db.session.add(new_center)
     db.session.commit()
@@ -46,16 +45,12 @@ def register_center(center_id):
     return logging.debug('New Center: ', data)
 
 @app.route("/login", methods=["GET", "POST"])
-def login_center(center_id, center_name, password):
-    parser = argparse.ArgumentParser()  # only allow price changes, no name changes allowed
-    parser.add_argument('center_name', type=str, required=True,
-                        help="string type, this field cannot be left blank")
-    parser.add_argument('password', type=str, required=True,
-                        help="Must enter the center password (type = str)"
-                        )
+def login_center(center_name, password):
 
-    args = parser.parse_args()
-    center = Center.query.filter_by(center_name=args.center_name).one_or_none()
+    center_name = request.json['center_name']
+    password = request.json['password']
+
+    center = Center.query.filter_by(center_name=center_name).one_or_none()
     if not center or not center.check_password(password):
         return logging.error('Wrong center name or password')
     center_id = center.center_id
